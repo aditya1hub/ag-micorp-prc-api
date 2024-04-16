@@ -1,0 +1,31 @@
+%dw 2.0
+
+type auto_e21e23d4_beec_454e_adc7_fc55297cf10b_Output_Payload = {
+  orderData: {
+    signatureRequiredFlag: Boolean, 
+    shipInstructions: String, 
+    giftWrapMessage: String, 
+    subTotal: Number, 
+    giftWrapFlag: Boolean, 
+    poNumber: String, 
+    currencyCode: String, 
+    _?: Any
+  }, 
+  items: Array<{    quantity: Number,     size: String,     orderId?: String,     id: String,     category: String,     _?: Any  }>, 
+  customer: {
+    firstName: String, 
+    lastName: String, 
+    phoneNumber: String, 
+    address: {
+      zipCode: String, 
+      country: String, 
+      city: String, 
+      address1: String, 
+      _?: Any
+    }, 
+    email: String, 
+    _?: Any
+  }, 
+  _?: Any
+}
+

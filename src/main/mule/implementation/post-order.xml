@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+
+		<sub-flow name="post-order-sub-flow" doc:id="a79c7fda-87c4-4653-bc8c-6ebf7125975d" >
+		<json-logger:logger doc:name="INFO: START" doc:id="452ed550-a0db-4009-92ef-819774a6f3b3" config-ref="json-logger-configuration" message="Start of post-order-sub-flow"/>
+		<ee:transform doc:name="Set Payload" doc:id="cc7714ba-cdee-45c5-b47d-31bce02fd6d9" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="ordersData" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.orderData]]></ee:set-variable>
+				<ee:set-variable variableName="customerData" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.customer
+
+]]></ee:set-variable>
+				<ee:set-variable variableName="itemsData" ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items]]></ee:set-variable>
+			</ee:variables>
+		
+</ee:transform>
+		<flow-ref doc:name="create-customer" doc:id="deda74c2-ff3d-4a0c-9a1e-d277b57eb976" name="create-customer"/>
+		<flow-ref doc:name="create-order" doc:id="0db7c7fb-7d90-4eba-8e41-4142be6959b3" name="create-order"/>
+		<flow-ref doc:name="create-items" doc:id="99464fa7-01ea-4bd5-8758-b7ae97fcd5b0" name="create-items"/>
+		<ee:transform doc:name="Set Response">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  correlationId: vars.correlationId,
+  message: "Order created Successfully"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<json-logger:logger doc:name="INFO: END" doc:id="41dc204a-6a3b-4617-85b0-054a850a5a8e" config-ref="json-logger-configuration-display-content" message='"End of post-order-sub-flow" -- #[vars.correlationId]' tracePoint="END"/>
+        
+</sub-flow>
+	<sub-flow name="create-customer" doc:id="23139c01-6b99-4ab4-89b6-5c3544d214ab" >
+		<json-logger:logger doc:name="Before Request" doc:id="3e5af88c-0321-4770-b69d-82dee43d054f" config-ref="json-logger-configuration-display-content" message="Before request to customer endpoint"/>
+		<http:request method="POST" doc:name="customer-endpoint" doc:id="53e50864-1fa4-4f9b-8ec2-3d3cd87853c8" config-ref="micorp-sys-api-request-configuration" sendCorrelationId="ALWAYS" target="customerId" targetValue="#[payload..id[1]]" path="${micorp-sys-api.postCustomer}">
+			<http:body ><![CDATA[#[vars.customerData]]]></http:body>
+			<http:headers ><![CDATA[#[output application/json
+---
+{
+	"client_secret" : Mule::p('secure::headers.client_secret'),
+	"client_id" : Mule::p('secure::headers.client_id')
+}]]]></http:headers>
+		</http:request>
+		<json-logger:logger doc:name="After Request" doc:id="99d0e792-8606-4c4f-9b6f-6361d11dac72" config-ref="json-logger-configuration-display-content" message="After Request to customer endpoint" tracePoint="AFTER_REQUEST" />
+	
+</sub-flow>
+	<sub-flow name="create-order" doc:id="dfa21e32-22b2-4978-acef-1779c5abbbc0" >
+		<ee:transform doc:name="Set Payload" doc:id="84eabd8e-c7d8-4c74-b61f-8f9c633039e3" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="dwl/var-create-orders-data.dwl" variableName="ordersData" />
+			</ee:variables>
+		
+</ee:transform>
+		<json-logger:logger doc:name="Before Request" doc:id="8ba2dc11-94de-4f3c-9574-5430b5741ddc" config-ref="json-logger-configuration-display-content" message="Before request to order endpoint" tracePoint="BEFORE_REQUEST" />
+		<http:request method="POST" doc:name="order-endpoint" doc:id="21918ed6-ffae-4181-a13e-a7d80a070b1f" config-ref="micorp-sys-api-request-configuration" sendCorrelationId="ALWAYS" target="orderId" targetValue="#[payload..id[1]]" path="${micorp-sys-api.postOrder}">
+			<http:body ><![CDATA[#[vars.ordersData]]]></http:body>
+			<http:headers ><![CDATA[#[output application/json
+---
+{
+	"client_secret" : Mule::p('secure::headers.client_secret'),
+	"client_id" : Mule::p('secure::headers.client_id')
+}]]]></http:headers>
+		</http:request>
+		<json-logger:logger doc:name="After Request" doc:id="a70d814e-a65f-47e2-a105-6c3ba89e8ea3" config-ref="json-logger-configuration-display-content" message="After Request to order endpoint" tracePoint="AFTER_REQUEST"/>
+	</sub-flow>
+	<sub-flow name="create-items" doc:id="e21e23d4-beec-454e-adc7-fc55297cf10b" >
+		<ee:transform doc:name="Set Payload" doc:id="4f45f080-5ca9-410c-89e5-1f873899e86e" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable resource="dwl/var-create-items-data.dwl" variableName="itemsData" />
+			</ee:variables>
+		</ee:transform>
+		<json-logger:logger doc:name="Before Request" doc:id="55000f0b-2311-4182-a9fb-8fbf8f6d8451" config-ref="json-logger-configuration-display-content" message="Before request to items endpoint" tracePoint="BEFORE_REQUEST" />
+		<http:request method="POST" doc:name="item-endpoint" doc:id="ed9134d3-bf24-421e-9404-489bd5760703" config-ref="micorp-sys-api-request-configuration" sendCorrelationId="ALWAYS" path="${micorp-sys-api.postItems}">
+				<http:body ><![CDATA[#[vars.itemsData]]]></http:body>
+			<http:headers><![CDATA[#[output application/json
+---
+{
+	"client_secret" : Mule::p('secure::headers.client_secret'),
+	"client_id" : Mule::p('secure::headers.client_id')
+}]]]></http:headers>
+			</http:request>
+		<json-logger:logger doc:name="After Request" doc:id="edeb08e1-6b0b-4804-947e-1248a229402c" config-ref="json-logger-configuration-display-content" message="After request to items endpoint" tracePoint="AFTER_REQUEST" />
+	</sub-flow>
+</mule>

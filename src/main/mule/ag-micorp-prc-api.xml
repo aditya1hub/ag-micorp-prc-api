@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <flow name="ag-micorp-prc-api-main">
+        <http:listener config-ref="ag-micorp-prc-api-listener-configuration" path="${http.listener.basePath}">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <ee:transform doc:name="vars: correlationId" doc:id="e4ab9320-8b3e-4086-90ca-a7598c4098c8">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="correlationId"><![CDATA[attributes.headers.'x-correlation-id' default uuid()]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <apikit:router config-ref="ag-micorp-prc-api-config" />
+    </flow>
+    <flow name="get:\healthCheck:ag-micorp-prc-api-config">
+        <flow-ref doc:name="health-check-sub-flow" doc:id="3ba32e5f-62f4-4106-b7b6-a252a2006147" name="health-check-sub-flow" />
+    </flow>
+    <flow name="post:\orders:application\json:ag-micorp-prc-api-config" >
+		<flow-ref doc:name="post-order-sub-flow" doc:id="c8c2e3e9-3068-4c96-be5e-e4ce8648706c" name="post-order-sub-flow" />
+	</flow>
+</mule>

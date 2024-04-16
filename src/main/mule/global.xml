@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:error-handler-plugin="http://www.mulesoft.org/schema/mule/error-handler-plugin"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/error-handler-plugin http://www.mulesoft.org/schema/mule/error-handler-plugin/current/mule-error-handler-plugin.xsd">
+	   <http:listener-config name="ag-micorp-prc-api-listener-configuration" doc:description="dd">
+        <http:listener-connection host="${http.host}" port="${http.port}" connectionIdleTimeout="${http.connectionIdleTimeout}">
+			<reconnection >
+				<reconnect frequency="${http.reconnection.frequency}" count="${http.reconnection.attempts}"/>
+			</reconnection>
+		</http:listener-connection>
+    </http:listener-config>
+    <http:request-config name="micorp-sys-api-request-configuration" doc:name="HTTP Request configuration" doc:id="6efa38a2-0e18-42c9-9571-262017659c19" responseTimeout="${micorp-sys-api.response.timeout}" basePath="${micorp-sys-api.basePath}">
+		<http:request-connection host="${micorp-sys-api.host}" port="${micorp-sys-api.port}" protocol="HTTPS">
+			<reconnection >
+				<reconnect count="${micorp-sys-api.reconnection.attempts}" frequency="${micorp-sys-api.reconnection.frequency}"/>
+			</reconnection>
+		</http:request-connection>
+	</http:request-config>
+    <apikit:config name="ag-micorp-prc-api-config" api="resource::ce235d46-115c-497c-b0e2-474afd80f5e9:ag-micorp-prc-api:1.0.1:raml:zip:ag-micorp-prc-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<configuration-properties doc:name="Configuration properties" doc:id="4fc18d5c-30cc-4114-834d-556c4782194e" file="properties\config-${mule.env}.yaml" doc:description="Properties for specific environment"/>
+	<json-logger:config name="json-logger-configuration" doc:name="JSON Logger Config" doc:id="e2ad4cde-3491-464a-b739-aaedd9470c0e" environment="${mule.env}" disabledFields="${json.logger.application.disabledFields}" doc:description="Does not log the content/payload at this point" contentFieldsDataMasking="${json.logger.application.maskedFields}"/>
+	<json-logger:config name="json-logger-configuration-display-content" doc:name="JSON Logger Config" doc:id="672940a3-4b7d-4183-aa15-160537e08170" environment="${mule.env}" doc:description="Logs the content/payload at this point" disabledFields="${json.logger.application.disabledFields}" contentFieldsDataMasking="${json.logger.application.maskedFields}"/>
+	<error-handler-plugin:config name="error-handler-plugin-config" doc:name="Error Handler Plugin Config" doc:id="324fce89-3f14-40b0-9fa4-544b31257c0b" />
+	<secure-properties:config name="secure-properties-config" doc:name="Secure Properties Config" doc:id="4b13b08e-f8fb-4344-9251-a5f6e436bfd5" file="properties\secure\config-${mule.env}-secure.yaml" key="${mule.key}" doc:description="Contains secure properties of micorp-prc-api">
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="false" doc:name="API Autodiscovery" doc:id="553a2db3-6f7c-4289-b9fa-3d0b47c7daa8" flowRef="ag-micorp-prc-api-main" />
+	<configuration doc:name="Configuration" doc:id="5d243c81-95ce-4276-af8d-d99fde29a2bf" defaultErrorHandler-ref="global-error-handler" doc:description="Configuration for error handler "/>
+	
+</mule>

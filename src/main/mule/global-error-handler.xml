@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:error-handler-plugin="http://www.mulesoft.org/schema/mule/error-handler-plugin" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/error-handler-plugin http://www.mulesoft.org/schema/mule/error-handler-plugin/current/mule-error-handler-plugin.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<error-handler name="global-error-handler" doc:id="792639b8-c0ef-452b-8696-8c6606c88a85" >
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="b77b0c43-bdbc-41c7-87e6-0feed30c9d38" >
+	
+			<error-handler-plugin:on-error doc:name="Process Error" doc:id="cb9dd87c-cf5a-4165-b20c-43a730cd22ad" previousErrors="#[[]]" config-ref="error-handler-plugin-config"/>
+			<set-variable value="#[attributes.httpStatus default 500]" doc:name="httpStatus" doc:id="45fafc6f-4ab5-4b61-8a31-a8f95e0378e2" variableName="httpStatus"/>
+			<set-variable value='#[error.errorType.asString default "HTTP:INTERNAL_SERVER_ERROR"]' doc:name="errorType" doc:id="5aadf92c-ea9f-4ebb-919a-28c671381f82" variableName="errorType"/>
+			<set-variable value="#[error.exception.errorMessage.typedValue default error.description]" doc:name="errorMsg" doc:id="dbc2eb2b-2fbd-49a9-8335-08a04fc6dba8" variableName="errorMsg"/>
+			<ee:transform doc:name="Map Error Response" doc:id="c51b3fb9-48e2-45ab-a252-29dad763a508" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	success: false,
+	apiName: Mule::p('api.name'),
+	version: Mule::p('api.version'),
+	correlationId: correlationId,
+	errorDetails:[
+		{
+			code: vars.httpStatus,
+			reason: vars.errorType,
+			message: vars.errorMsg
+		}
+	]
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<json-logger:logger doc:name="ERROR: Error Response From Error Handler" doc:id="14cd4970-85ae-4773-8782-265454eba8d2" config-ref="json-logger-configuration-display-content" tracePoint="EXCEPTION" message="ERROR: Error Response From Error Handler"/>
+		</on-error-continue>
+	</error-handler>
+	</mule>

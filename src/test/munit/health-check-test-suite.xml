@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="health-check-test-suite.xml" />
+	<munit:test name="health-check-test-suite" doc:id="4b026674-8b7a-4b91-a6ce-1c0094c2dde1" description="Test">
+		<munit:execution >
+			<munit:set-event doc:name="Set Client Id, Client Secret" doc:id="57597aea-7a15-429c-b360-c189f09ed35c" >
+				<munit:attributes value="#[readUrl('classpath://healthCheck/setEventAttributes.dwl')]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to health-check-sub-flow" doc:id="5d5dce03-efbf-4e70-ab4e-efebe5ec5484" name="get:\healthCheck:ag-micorp-prc-api-config"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="End Logger" doc:id="efc72318-aa85-4fde-9bb4-7f4ec37f6a14" processor="json-logger:logger">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="824a43f7-31df-4f6d-b341-2d5c3e745f54" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>
